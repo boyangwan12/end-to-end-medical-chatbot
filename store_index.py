@@ -22,14 +22,7 @@ from tqdm import tqdm
 from src.helper import load_pdf_file, text_split, download_hugging_face_embeddings
 
 # Import Pinecone and LangChain components
-try:
-    from pinecone.grpc import PineconeGRPC as Pinecone
-    from pinecone import ServerlessSpec, Index
-    from langchain_pinecone import PineconeVectorStore
-except ImportError as e:
-    print("Error: Required packages not found. Please install them using:")
-    print("pip install -r requirements.txt")
-    sys.exit(1)
+from pinecone import Pinecone, ServerlessSpec, Index
 
 def print_step(step: str, status: str = "START") -> None:
     """Print a formatted step message with status."""
@@ -73,10 +66,10 @@ def main():
         index_name = "medicalbot"
         print_step("Pinecone client initialized", "DONE")
 
-        # Create Pinecone index if it doesn't exist
+        # Robust index creation and readiness check
         print_step(f"Checking if index '{index_name}' exists...")
         if index_name not in [idx.name for idx in pc.list_indexes()]:
-            print_step(f"Creating new index: {index_name}")
+            print_step(f"Index '{index_name}' does not exist. Creating it...")
             pc.create_index(
                 name=index_name,
                 dimension=384,  # for all-MiniLM-L6-v2
@@ -86,19 +79,50 @@ def main():
                     region="us-east-1"
                 )
             )
-            print_step(f"Index '{index_name}' created successfully", "DONE")
+            # Wait for index to be ready
+            import time
+            while True:
+                status = pc.describe_index(index_name).status['ready']
+                if status:
+                    print_step(f"Index '{index_name}' is ready.", "DONE")
+                    break
+                print_step("Waiting for index to be ready...", "SKIP")
+                time.sleep(2)
         else:
-            print_step(f"Using existing index: {index_name}", "SKIP")
+            print_step(f"Index '{index_name}' already exists.", "SKIP")
+        index = pc.Index(index_name)
 
-        # Upsert documents using LangChain's PineconeVectorStore
-        print_step(f"Upserting {len(text_chunks)} chunks to Pinecone...")
-        docsearch = PineconeVectorStore.from_documents(
-            documents=text_chunks,
-            index_name=index_name,
-            embedding=embeddings,
-        )
+        # Upsert documents directly using Pinecone v7+ API (optimized batching)
+        print_step(f"Upserting {len(text_chunks)} chunks to Pinecone in batches...")
+        batch_size = 32  # Tune this based on your memory/cpu
+        total_chunks = len(text_chunks)
+        for start in range(0, total_chunks, batch_size):
+            end = min(start + batch_size, total_chunks)
+            batch_chunks = text_chunks[start:end]
+            texts = [chunk.page_content for chunk in batch_chunks]
+            # Use batch embedding for speed (if available)
+            try:
+                vectors_batch = embeddings.embed_documents(texts)
+            except Exception:
+                # Fallback to single embedding if batch not supported
+                vectors_batch = [embeddings.embed_query(text) for text in texts]
+            batch_vectors = []
+            for idx, chunk in enumerate(batch_chunks):
+                metadata = getattr(chunk, 'metadata', {}).copy() if hasattr(chunk, 'metadata') else {}
+                metadata["text"] = chunk.page_content
+                batch_vectors.append({
+                    "id": f"chunk-{start + idx}",
+                    "values": vectors_batch[idx],
+                    "metadata": metadata
+                })
+            try:
+                response = index.upsert(vectors=batch_vectors)
+                print(f"✅ Upserted chunks {start}-{end-1} (response: {response})")
+            except Exception as upsert_error:
+                print(f"❌ Error upserting batch {start}-{end-1}: {upsert_error}")
+                raise
         print_step("Upsert completed successfully", "DONE")
-        print("\n✨ Indexing process completed successfully! ✨")
+        print("\n Indexing process completed successfully! ")
 
     except Exception as e:
         print_step(f"An error occurred: {str(e)}", "ERROR")

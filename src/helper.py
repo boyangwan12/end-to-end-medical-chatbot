@@ -15,9 +15,9 @@ Functions:
     download_hugging_face_embeddings(): Returns a HuggingFace embedding model instance.
 """
 
-from langchain.document_loaders import PyPDFLoader, DirectoryLoader
+from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 def load_pdf_file(data):
     """
