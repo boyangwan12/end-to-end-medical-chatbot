@@ -9,7 +9,7 @@ A modular, production-ready medical chatbot system built with Flask, LangChain, 
 
 ```mermaid
 flowchart TD
-    A[User (Web Chat UI)] -->|1. Sends Question| B(Flask App)
+    A[User (Web Chat UI)] -->|1. Sends Question| B[Flask App]
     B -->|2. Embeds Query| C[Embeddings (HuggingFace/OpenAI)]
     C -->|3. Semantic Search| D[Pinecone Vector DB]
     D -->|4. Retrieve Relevant Chunks| B
