@@ -23,6 +23,25 @@ flowchart TD
 
 ---
 
+## 🖼️ Screenshots & Diagrams
+
+### Solution Architecture
+![Solution Architecture](data/pics/Solution_Architecture.png)
+
+### Chatbot Web App Example
+![Acne App Screenshot](data/pics/acne_app.png)
+
+### Chatbot Architecture Flow
+![Chatbot Architecture Flow](data/pics/chatbot_architecture_flow.png)
+
+### Reference PDF Example
+![PDF Reference Example](data/pics/pdf_reference.png)
+
+### Miscellaneous
+![Miscellaneous Diagram](data/pics/idk.png)
+
+---
+
 ## Overview
 This project answers medical questions using information extracted from large PDF medical documents. It leverages:
 - **Flask** for the web interface and API
