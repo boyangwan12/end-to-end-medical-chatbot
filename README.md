@@ -1,48 +1,12 @@
 End-to-End Medical Chatbot
-==============================# End-to-End Medical Chatbot
+==============================
 
 A modular, production-ready medical chatbot system built with Flask, LangChain, and Pinecone for semantic search and retrieval from medical documents.
 
 ---
 
-## 🏗️ Architecture Flowchart
-
-```mermaid
-flowchart TD
-    A[User (Web Chat UI)] -->|1. Sends Question| B[Flask App]
-    B -->|2. Embeds Query| C[Embeddings (HuggingFace/OpenAI)]
-    C -->|3. Semantic Search| D[Pinecone Vector DB]
-    D -->|4. Retrieve Relevant Chunks| B
-    B -->|5. Retrieval-Augmented Prompt| E[LLM (LangChain/OpenAI)]
-    E -->|6. Answer| B
-    B -->|7. Display Answer| A
-    F[PDF Medical Docs] -->|Indexing: Load & Chunk| G[store_index.py]
-    G -->|Embed Chunks| C
-    C -->|Upsert Vectors| D
-```
-
----
-
-## 🖼️ Screenshots & Diagrams
-
-### Solution Architecture
-![Solution Architecture](data/pics/Solution_Architecture.png)
-
-### Chatbot Web App Example
-![Acne App Screenshot](data/pics/acne_app.png)
-
-### Chatbot Architecture Flow
-![Chatbot Architecture Flow](data/pics/chatbot_architecture_flow.png)
-
-### Reference PDF Example
-![PDF Reference Example](data/pics/pdf_reference.png)
-
-### Miscellaneous
-![Miscellaneous Diagram](data/pics/idk.png)
-
----
-
 ## Overview
+
 This project answers medical questions using information extracted from large PDF medical documents. It leverages:
 - **Flask** for the web interface and API
 - **LangChain** for document processing and retrieval-augmented generation (RAG)
@@ -54,6 +18,8 @@ This project answers medical questions using information extracted from large PD
 - Fast, accurate retrieval of relevant information
 - Modular codebase for easy extension
 - Secure API key management via `.env`
+
+---
 
 ## 📁 Project Structure
 
@@ -115,6 +81,47 @@ end-to-end-medical-chatbot/
 
 7. **Ask questions!**
     - Type a medical question in the chat. The app will retrieve relevant info from your PDFs and generate an answer using an LLM.
+
+---
+
+# 🔹 System Explanation with Visual References
+
+To better understand the system, follow this walkthrough using diagrams as visual cues:
+
+## Step 1: End-to-End Architecture Overview
+The solution starts when a user submits a medical question. The Flask backend handles the query, routes it through the embedding model, retrieves relevant chunks from Pinecone, constructs a prompt, and passes it to an LLM for response generation. The process concludes by sending the generated response back to the user interface.
+
+**See Image:**
+![Solution Architecture](data/pics/Solution_Architecture.png)
+
+## Step 2: User Interface Interaction
+The chat interface (built in HTML and served via Flask) is the user’s entry point. It allows real-time interaction with the system.
+
+**Refer to Image:**
+![Chatbot Web App Example](data/pics/acne_app.png)
+
+## Step 3: Internal Query Flow
+After the question is received, the backend:
+- Embeds the query.
+- Queries Pinecone for similar document chunks.
+- Combines those chunks with the query into a RAG prompt.
+- Sends the prompt to the LLM.
+- Returns the generated answer to the UI.
+
+**Image:**
+![Chatbot Architecture Flow](data/pics/chatbot_architecture_flow.png)
+
+## Step 4: Document Indexing Pipeline
+Before the system can answer anything, PDFs must be prepared. The `store_index.py` script loads each medical PDF, splits it into overlapping chunks, converts them into vectors, and stores them in Pinecone.
+
+**Visualized in Image:**
+![PDF Reference Example](data/pics/pdf_reference.png)
+
+## Step 5: Development & Debugging
+During development, logs, error cases, and edge flows were handled using test diagrams and internal state visualizations.
+
+**See Image:**
+![Miscellaneous Diagram](data/pics/idk.png)
 
 ---
 
